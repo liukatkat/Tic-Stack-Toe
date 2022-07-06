@@ -8,40 +8,43 @@
 import SwiftUI
 
 struct ContentView: View {
-    @StateObject var newGame : Game = Game()
-    
-    func initialize() {
-        newGame.reverseCross()
-    }
+    @StateObject var board = Board()
+    @State var currentLoc : CGPoint = CGPoint(x: 0, y: 0)
+    @State var cnt : Int = 0
+    @State var cirLoc : CGPoint = CGPoint(x: 29.5, y: 256)
     
     var body: some View {
-        VStack {
-            HStack {
-                ForEach(newGame.players[0].currentPieces) { piece in
-                    Circle()
-                        .frame(width: (UIScreen.main.bounds.width - 80)/5, height: (UIScreen.main.bounds.width - 80)/25*CGFloat(piece.level), alignment: .center)
-                }
-            }
-            .padding()
-            VStack{
-                ForEach(newGame.board) { row in
+        ZStack{
+            VStack {
+                ForEach((0...2), id: \.self){_ in
                     HStack {
-                        ForEach(row.cells) { cell in
+                        ForEach((0...2), id: \.self){_ in
                             RoundedRectangle(cornerRadius: 10)
-                                .fill(Color.gray)
-                                .frame(width: (UIScreen.main.bounds.width - 80)/3, height: (UIScreen.main.bounds.width - 80)/3, alignment: .center)
+                            .frame(minWidth: 10, idealWidth: 80, maxWidth: 100, minHeight: 10, idealHeight: 80, maxHeight: 100, alignment: .center)
+                            .aspectRatio(1, contentMode: .fit)
+                            .overlay(
+                                GeometryReader(content: { geometry in
+                                    Color.clear
+                                        .onAppear(perform: {
+                                            self.currentLoc = geometry.frame(in: .named("stack")).origin
+                                        })
+                                })
+                            )
+                            .onAppear(perform: {()->() in
+                                board.storeRectLoc(loc: currentLoc, index: cnt)
+                                cnt += 1
+                                print(currentLoc)
+                            })
                         }
                     }
                 }
             }
-            HStack {
-                ForEach(newGame.players[1].currentPieces) { piece in
-                    Circle()
-                        .frame(width: (UIScreen.main.bounds.width - 80)/5, height: (UIScreen.main.bounds.width - 80)/25*CGFloat(piece.level), alignment: .center)
-                }
-            }
+            
+            Rectangle()
+                .position(board.getRectLoc(index: 0))
+                .frame(minWidth: 10, idealWidth: 80, maxWidth: 100, minHeight: 10, idealHeight: 80, maxHeight: 100, alignment: .center)
         }
-        .onAppear(perform: initialize)
+        .coordinateSpace(name: "stack")
     }
 }
 
